@@ -34,11 +34,21 @@ spam_parse_byte(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *
+spam_parse_keywords(PyObject *self, PyObject *args, PyObject *kwargs) {
+    static char *format[] = {"a", "b", NULL};
+    int a, b;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii", format, &a, &b)) { return NULL; }
+    return Py_BuildValue("ii", a, b);
+}
+
+
 static struct PyMethodDef spammethods[] = {
     /* ml_name, ml_meth, ml_flags, ml_doc */
     {"parse_int", spam_parse_int, METH_VARARGS, NULL},
     {"parse_str", spam_parse_str, METH_VARARGS, NULL},
     {"parse_byte", spam_parse_byte, METH_VARARGS, NULL},
+    {"parse_keywords", (PyCFunction)spam_parse_keywords, METH_VARARGS|METH_KEYWORDS, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
