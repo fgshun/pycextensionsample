@@ -1,22 +1,33 @@
 # Python C Extension の練習
 [Python インタプリタの拡張と埋め込み](https://docs.python.jp/3/extending/index.html) や
 [Python/C API リファレンスマニュアル](https://docs.python.jp/3/c-api/index.html)
-を読んだものの。いざつかおうとすると何がどこにあるか探しなおすことに。
+は良く出来た文章だけれども。いざつかおうとすると自分の未熟さゆえ何がどこにあるか探しなおすことに。
 
 なので複数回世話になった部分についてリンクをはったり動きが確かめられるコードをかいてみたりすることにした。
 
+Python 3.6.2 にて動作させている。たぶん 3.5 でも動く。
+
 * empty
-  * 空のモジュールの作成方法。一段階初期化。
+  * ほぼ空のモジュールの作成方法。一段階初期化。
   * [PyModule_Create](https://docs.python.jp/3/c-api/module.html#c.PyModule_Create)
   * [PyModuleDef](https://docs.python.jp/3/c-api/module.html#c.PyModuleDef)
+  * モジュールオブジェクトに手を加える場所は PyInit_ の PyModule_Create で作った後。ここでは [PyModule_AddObject](https://docs.python.jp/3/c-api/module.html#c.PyModule_AddObject) でオブジェクトを追加してみている。
+* multiphasemoduleinit
+  * モジュールの作成方法。多段階初期化。
+  * Python 3.5 より [PEP 489](https://www.python.org/dev/peps/pep-0451/) にある [PyModuleDef_Init](https://docs.python.jp/3/c-api/module.html#c.PyModuleDef_Init) によるモジュール作成が可能になった。一段階初期化では PyInit_ で直接行っていたモジュールオブジェクトの操作は Py_mod_exec に登録した関数で行う。 `__init__` を書く感覚と変わらない書き心地。多段階初期化の手間が軽減されている気がする、むしろ一段階初期化と同程度の手間で済んでいるのではないだろうか。
+  * モジュールオブジェクトの作り方にまで手を出すときは Py_mod_create に関数を登録。こちらは `__new__` みたいな感じ。必要となるケースは少なそう。
+  * 各モジュールに固定のメモリを割り当てることができる。 m_size にて大きさを指定。不要なら 0　。 -1 は特殊で再初期化不可であることをインタプリタに伝える、静的な領域を使っているときなどに -1 設定する。 [PEP 3121](https://www.python.org/dev/peps/pep-3121/) に 1 以上を設定し [PyModule_GetState](https://docs.python.jp/3/c-api/module.html#c.PyModule_GetState) を使う例がある。
+  * [xxmodule.c](https://github.com/python/cpython/blob/3.6/Modules/xxmodule.c) というテンプレートが CPython のソースには含まれている。ある程度わかっていれば、これから作ろうとしているものに対しどこが不要か選べるならば便利なのだろうと思う。新しい型の作り方から始まっている。
 * pymethodef
-  * モジュール関数の作成方法。
+  * モジュール関数の作成方法。 PyCFunction 、つまりひとつ目の引数に モジュールオブジェクト、ふたつ目の引数に引数を表す tuple オブジェクトを受け取る関数を作ればよい。
   * [PyMethodDef](https://docs.python.jp/3/c-api/structures.html#c.PyMethodDef)
   * ml_flags で使える呼び出し規約 (calling convention)
     * METH_VARARGS, METH_KEYWORDS, METH_NOARGS, METH_O
+    * キーワード引数を使えるようにしたり。引数を受け取らない、引数をひとつだけ受け取ることを示しオーバーヘッドを減らしたりできる。
   * PyMethodDef はクラスメソッド、スタティックメソッドの作成にも使う。 binding convention 。
     * METH_CLASS, METH_STATIC
 * parseargs
+  * モジュール関数の引数は Python の tuple と dict オブジェクトとして見える。これを C の変数に変換するのはよくある作業。なのでそれ用の関数が用意されている。また、戻り値は Python オブジェクトと決まっているので C の変数から変換するのもよくある作業。これも。
   * [関数、メソッドの引数の解釈](https://docs.python.jp/3/c-api/arg.html#parsing-arguments)
     * PyArgs_ParseTuple
     * PyArgs_ParseTupleAndKeywords 

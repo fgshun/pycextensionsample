@@ -1,5 +1,10 @@
-#define Py_LIMITED_API
+#define Py_LIMITED_API 0x03050000
 #include <Python.h>
+
+
+static PyModuleDef_Slot spamslots[] = {
+    {0, NULL}
+};
 
 
 static PyObject *
@@ -44,25 +49,19 @@ static struct PyMethodDef spammethods[] = {
 
 static struct PyModuleDef spammodule = {
     PyModuleDef_HEAD_INIT,
-    "spam",   /* m_name */
-    NULL,     /* m_doc */
-    -1,       /* m_size */
+    "spam",      /* m_name */
+    NULL,        /* m_doc */
+    0,           /* m_size */
     spammethods, /* m_methods */
-    NULL,     /* m_slots */
-    NULL,     /* m_traverse */
-    NULL,     /* m_clear */
-    NULL      /* m_free */
+    spamslots,   /* m_slots */
+    NULL,        /* m_traverse */
+    NULL,        /* m_clear */
+    NULL         /* m_free */
 };
 
 
 PyMODINIT_FUNC
 PyInit_spam(void)
 {
-    PyObject *m;
-
-    m = PyModule_Create(&spammodule);
-    if (m == NULL)
-        return NULL;
-
-    return m;
+    return PyModuleDef_Init(&spammodule);
 }

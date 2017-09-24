@@ -18,11 +18,19 @@ static struct PyModuleDef spammodule = {
 PyMODINIT_FUNC
 PyInit_spam(void)
 {
-    PyObject *m;
+    PyObject *module, *error;
 
-    m = PyModule_Create(&spammodule);
-    if (m == NULL)
-        return NULL;
+    module = PyModule_Create(&spammodule);
+    if (!module) { goto fail; }
 
-    return m;
+    /* initialize module */
+    error = PyErr_NewException("spam.error", NULL, NULL);
+    if (!error) { goto fail; }
+    Py_INCREF(error);
+    if (PyModule_AddObject(module, "error", error)) { goto fail; }
+
+    return module;
+ fail:
+    Py_XDECREF(module);
+    return NULL;
 }
