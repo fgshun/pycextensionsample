@@ -32,7 +32,7 @@ Python 3.5 より [PEP 489](https://www.python.org/dev/peps/pep-0451/) にある
 [呼び出し規約 METH_FASTCALL が 3.6 で追加](http://dsas.blog.klab.org/archives/2017-01/python-dev-201701.html) とのこと。タプルや辞書への詰め直しが不要で早い。 [たしかにあった](https://github.com/python/cpython/blob/6969eaf4682beb01bc95eeb14f5ce6c01312e297/Include/methodobject.h#L91-L114) がドキュメント化されてはいないのでサードパーティーが使うものではないというところだろうか。
 
 ## parseargs
-モジュール関数の引数は通常 Python の tuple と dict オブジェクトとして見える。これを C の変数に変換するのはよくある作業。なのでそれ用の関数が用意されている。また、戻り値は Python オブジェクトと決まっているので C の変数から変換するのもよくある作業。これも。
+PyCFunction, PyCFunctionWithKeywords は通常 Python の tuple と dict オブジェクトを渡される。これを C の変数に変換するのはよくある作業。なのでそれ用の関数が用意されている。また、戻り値は Python オブジェクトと決まっているので C の変数から変換するのもよくある作業。これも。
 
 * [関数、メソッドの引数の解釈](https://docs.python.jp/3/c-api/arg.html#parsing-arguments)
   * PyArgs_ParseTuple
@@ -40,5 +40,8 @@ Python 3.5 より [PEP 489](https://www.python.org/dev/peps/pep-0451/) にある
 * [値の構築](https://docs.python.jp/3/c-api/arg.html#building-values)
   * Py_BuildValue
 
-## useabstractprotocol
-python だと `a.b` とか `a()` とか `a[0]` とか `for b in a:` などと書くいつもの操作、 C API ではどうやるの？ それにこたえてくれる文章が[抽象オブジェクトレイヤ (abstract objects layer)](https://docs.python.jp/3/c-api/abstract.html) 。ついでに `import a` のやりかたも。 [PyImport_ImportModule](https://docs.python.jp/3/c-api/import.html#c.PyImport_ImportModule) を使う。抽象オブジェクトレイヤの関数、メソッド呼び出しと組み合わせれば標準ライブラリが使える。
+## abstractprotocol
+python だと `a.b` とか `a()` とか `a[0]` とか `for b in a:` などと書くいつもの操作、 C API ではどうやるの？ それにこたえてくれる文章が[抽象オブジェクトレイヤ (abstract objects layer)](https://docs.python.jp/3/c-api/abstract.html) 。それだけではないけれども。 [PyImport_ImportModule](https://docs.python.jp/3/c-api/import.html#c.PyImport_ImportModule) と PyObject_Call 系とを組み合わせれば標準ライブラリが使える。
+
+## datetime
+
