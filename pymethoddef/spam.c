@@ -1,12 +1,6 @@
 #define Py_LIMITED_API 0x03050000
 #include <Python.h>
 
-
-static PyModuleDef_Slot spamslots[] = {
-    {0, NULL}
-};
-
-
 static PyObject *
 spam_noargs(PyObject *self, PyObject *args)
 {
@@ -44,6 +38,11 @@ static struct PyMethodDef spammethods[] = {
     {"keywords", (PyCFunction)spam_keywords, METH_VARARGS|METH_KEYWORDS, NULL},
     {"o", spam_o, METH_O, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+
+static PyModuleDef_Slot spamslots[] = {
+    {0, NULL}
 };
 
 

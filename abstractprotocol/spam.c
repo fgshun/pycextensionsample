@@ -1,11 +1,6 @@
 #define Py_LIMITED_API 0x03050000
 #include <Python.h>
 
-static PyModuleDef_Slot spamslots[] = {
-    {0, NULL}
-};
-
-
 static PyObject *
 spam_getattr(PyObject *self, PyObject *args)
 {
@@ -80,6 +75,11 @@ static struct PyMethodDef spammethods[] = {
     {"getitem_from_seq", spam_getitem_from_seq, METH_VARARGS, NULL},
     {"useiter", spam_useiter, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+
+static PyModuleDef_Slot spamslots[] = {
+    {0, NULL}
 };
 
 

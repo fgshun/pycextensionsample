@@ -1,16 +1,11 @@
 #include <Python.h>
 
-static PyModuleDef_Slot spamslots[] = {
-    {0, NULL}
-};
-
-
 static PyObject *
 spam_parse_int(PyObject *self, PyObject *args)
 {
-    int a, b;
-    if (!PyArg_ParseTuple(args, "ii", &a, &b)) { return NULL; }
-    return Py_BuildValue("ii", a, b);
+    int a;
+    if (!PyArg_ParseTuple(args, "i", &a)) { return NULL; }
+    return Py_BuildValue("i", a);
 }
 
 
@@ -54,6 +49,11 @@ static struct PyMethodDef spammethods[] = {
     {"parse_byte", spam_parse_byte, METH_VARARGS, NULL},
     {"parse_keywords", (PyCFunction)spam_parse_keywords, METH_VARARGS|METH_KEYWORDS, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+
+static PyModuleDef_Slot spamslots[] = {
+    {0, NULL}
 };
 
 

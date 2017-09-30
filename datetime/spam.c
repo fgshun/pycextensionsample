@@ -1,11 +1,6 @@
 #include <Python.h>
 #include <datetime.h>
 
-static PyModuleDef_Slot spamslots[] = {
-    {0, NULL}
-};
-
-
 static PyObject *
 spam_date20170930(PyObject *self, PyObject *args)
 {
@@ -17,6 +12,11 @@ static struct PyMethodDef spammethods[] = {
     /* ml_name, ml_meth, ml_flags, ml_doc */
     {"date20170930", spam_date20170930, METH_NOARGS, NULL},
     {NULL, NULL, 0, NULL} /* Sentinel */
+};
+
+
+static PyModuleDef_Slot spamslots[] = {
+    {0, NULL}
 };
 
 
