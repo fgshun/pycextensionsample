@@ -41,9 +41,11 @@ PyCFunction, PyCFunctionWithKeywords は通常 Python の tuple と dict オブ�
   * Py\_BuildValue
 
 ## [abstractprotocol](abstractprotocol)
-python だと `a.b` とか `a()` とか `a[0]` とか `for b in a:` などと書くいつもの操作、 C API ではどうやるの？ それにこたえてくれる文章が[抽象オブジェクトレイヤ (abstract objects layer)](https://docs.python.jp/3/c-api/abstract.html) 。それだけではないけれども。 [PyImport\_ImportModule](https://docs.python.jp/3/c-api/import.html#c.PyImport_ImportModule) と PyObject\_Call 系とを組み合わせれば標準ライブラリが使える。
+Python だと `a.b` とか `a()` とか `a[0]` とか `for b in a:` などと書くいつもの操作、 C API ではどうやるの？ それにこたえてくれる文章が[抽象オブジェクトレイヤ (abstract objects layer)](https://docs.python.jp/3/c-api/abstract.html) 。また、ライブラリを import するには [PyImport\_ImportModule](https://docs.python.jp/3/c-api/import.html#c.PyImport_ImportModule) を使う。
 
 ## [datetime](datetime)
-ただ使うだけなら PyImport\_ImportModule することもできるけれども。オブジェクト生成や値の直接参照のための [マクロ](https://docs.python.jp/3/c-api/datetime.html) が存在する。これを使うときは `datetime.h` を include し PyDateTime\_IMPORT マクロを。
+datetime モジュールを使う。
+
+`PyImport_ImportModule('datetime')` することもできるけれども。オブジェクト生成や値の直接参照のための [マクロ](https://docs.python.jp/3/c-api/datetime.html) が用意されている。これを使うときは `datetime.h` を include し PyDateTime\_IMPORT マクロを実行しておく必要がある。
 
 [PyCapsule](https://docs.python.jp/3/c-api/capsule.html) の使用例を [datetimemodule.c](https://github.com/python/cpython/blob/3.6/Modules/_datetimemodule.c#L5835) で発見。 [PyDateTime\_IMPORT マクロの正体](https://github.com/python/cpython/blob/master/Include/datetime.h#L202-L203) は PyCapsule\_Import で型オブジェクトや関数へのポインタを用意するというものだった。
