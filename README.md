@@ -48,4 +48,4 @@ datetime モジュールを使う。
 
 `PyImport_ImportModule('datetime')` することもできるけれども。オブジェクト生成や値の直接参照のための [マクロ](https://docs.python.jp/3/c-api/datetime.html) が用意されている。これを使うときは `datetime.h` を include し PyDateTime\_IMPORT マクロを実行しておく必要がある。
 
-[PyCapsule](https://docs.python.jp/3/c-api/capsule.html) の使用例を [datetimemodule.c](https://github.com/python/cpython/blob/3.6/Modules/_datetimemodule.c#L5835) で発見。 [PyDateTime\_IMPORT マクロの正体](https://github.com/python/cpython/blob/master/Include/datetime.h#L202-L203) は PyCapsule\_Import で型オブジェクトや関数へのポインタを用意するというものだった。
+[PyCapsule](https://docs.python.jp/3/c-api/capsule.html) の使用例を [\_datetimemodule.c](https://github.com/python/cpython/blob/3.6/Modules/_datetimemodule.c#L5835) で発見。 [PyDateTime\_IMPORT マクロの正体](https://github.com/python/cpython/blob/master/Include/datetime.h#L202-L203) は PyCapsule\_Import で型オブジェクトや関数へのポインタを用意するというものだった。
