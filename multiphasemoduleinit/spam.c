@@ -1,14 +1,22 @@
 #define Py_LIMITED_API 0x03050000
 #include <Python.h>
 
+static PyObject *SpamError = NULL;
+
 int spam_exec(PyObject *module)
 {
-    PyObject *e;
+    PyObject *zero;
 
-    e = PyErr_NewException("spam.error", NULL, NULL);
-    if (!e) { goto fail; }
-    Py_INCREF(e);
-    if (PyModule_AddObject(module, "error", e)) { goto fail; }
+    if (!SpamError) {
+        SpamError = PyErr_NewException("spam.error", NULL, NULL);
+        if (!SpamError) { goto fail; }
+    }
+    Py_INCREF(SpamError);
+    if (PyModule_AddObject(module, "error", SpamError)) { goto fail; }
+
+    zero = PyLong_FromLong(0);
+    if (!zero) { goto fail; }
+    if (PyModule_AddObject(module, "zero", zero)) { goto fail; }
 
     return 0;
  fail:
