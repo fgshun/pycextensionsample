@@ -1,5 +1,6 @@
 #define Py_LIMITED_API 0x03050000
 #include <Python.h>
+#include <structmember.h>
 
 typedef struct {
     PyObject_HEAD
@@ -9,8 +10,10 @@ typedef struct {
 static PyObject *
 Spam_new(PyTypeObject *cls, PyObject *args, PyObject *kwargs) {
     SpamObject *self;
-    self = PyObject_New(SpamObject, cls);
+    self = PyObject_GC_New(SpamObject, cls);
     if (!self) { return NULL; }
+    self->multiplier = NULL;
+    PyObject_GC_Track(self);
     return (PyObject *)self;
 }
 
@@ -45,12 +48,18 @@ Spam_dealloc(SpamObject *self)
 {
     PyObject_GC_UnTrack(self);
     Spam_clear(self);
-    PyObject_Del(self);
+    PyObject_GC_Del(self);
 }
 
 static PyObject *
 Spam_spam(SpamObject *self, PyObject *args) {
     PyObject *multiplicand = NULL;
+
+    if (!self->multiplier) {
+        PyErr_SetString(PyExc_AttributeError, "multiplier");
+        return NULL;
+    }
+
     if (!PyArg_ParseTuple(args, "O", &multiplicand)) { return NULL; }
     return PyNumber_Multiply(multiplicand, self->multiplier);
 }
@@ -59,6 +68,12 @@ static PyMethodDef Spam_methods[] = {
     {"spam", (PyCFunction)Spam_spam, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
+
+static PyMemberDef Spam_members[] = {
+    {"multiplier", T_OBJECT_EX, offsetof(SpamObject, multiplier), 0, NULL},
+    {NULL}
+};
+
 static PyType_Slot Spam_Type_slots[] = {
     {Py_tp_new, Spam_new},
     {Py_tp_init, Spam_init},
@@ -66,6 +81,7 @@ static PyType_Slot Spam_Type_slots[] = {
     {Py_tp_clear, Spam_clear},
     {Py_tp_dealloc, Spam_dealloc},
     {Py_tp_methods, Spam_methods},
+    {Py_tp_members, Spam_members},
     {0, 0},
 };
 

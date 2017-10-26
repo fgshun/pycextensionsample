@@ -50,3 +50,7 @@ datetime モジュールを使う。
 
 ## [definingtypes](definingtypes/spam.c)
 static にタイプオブジェクトを確保する方法は [チュートリアル](https://docs.python.jp/3/extending/newtypes.html) にある。ヒープに作るには [PyType_FromSpec](https://docs.python.jp/3/c-api/type.html#c.PyType_FromSpec) にておこなう。 new で PyObject_New を用いたら dealloc で PyObject_Del をわすれずに。
+
+PyObject* をメンバーにもったら循環参照対策を検討。 Py_TPFLAGS_HAVE_GC フラグを立てて PyObject_GC_New して PyObject_GC_Track 、 PyObject_GC_Untrack, PyObject_GC_DEL するようにするのと tp_traverse, tp_clear への登録をする。
+
+flags が READONLY ではない PyObject* を持った場合、これを del される可能性がある。 del された場合 NULL が入るので備えなければならない。
