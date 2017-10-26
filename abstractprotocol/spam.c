@@ -58,7 +58,7 @@ spam_useiter(PyObject *self, PyObject *args)
     Py_DECREF(iter);
 
     if (PyErr_Occurred()) { return NULL; }
-    return Py_BuildValue("n", temp);
+    return Py_BuildValue("n", hash);
 
 error:
     Py_XDECREF(iter);

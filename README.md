@@ -53,4 +53,4 @@ static にタイプオブジェクトを確保する方法は [チュートリ�
 
 PyObject* をメンバーにもったら循環参照対策を検討。 Py_TPFLAGS_HAVE_GC フラグを立てて PyObject_GC_New して PyObject_GC_Track 、 PyObject_GC_Untrack, PyObject_GC_DEL するようにするのと tp_traverse, tp_clear への登録をする。
 
-flags が READONLY ではない PyObject* を持った場合、これを del される可能性がある。 del された場合 NULL が入るので備えなければならない。
+flags が READONLY ではない PyObject* メンバーを持った場合、これを del される可能性がある。 del された場合 NULL が入るので備えなければならない。

@@ -18,8 +18,11 @@ int spam_exec(PyObject *module)
     if (!zero) { goto fail; }
     if (PyModule_AddObject(module, "zero", zero)) { goto fail; }
 
+    if (PyModule_AddIntConstant(module, "one", 1)) { goto fail; }
+
+    if (PyModule_AddStringConstant(module, "spam", "spamspamspam")) { goto fail; }
     return 0;
- fail:
+fail:
     Py_XDECREF(module);
     return -1;
 }

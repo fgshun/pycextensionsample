@@ -36,9 +36,9 @@ spam_parse_byte(PyObject *self, PyObject *args)
 static PyObject *
 spam_parse_keywords(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *format[] = {"a", "b", NULL};
-    int a, b;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "ii", format, &a, &b)) { return NULL; }
-    return Py_BuildValue("ii", a, b);
+    PyObject *a, *b;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO", format, &a, &b)) { return NULL; }
+    return Py_BuildValue("OO", a, b);
 }
 
 
