@@ -54,3 +54,8 @@ static にタイプオブジェクトを確保する方法は [チュートリ�
 PyObject* をメンバーにもったら循環参照対策を検討。 Py_TPFLAGS_HAVE_GC フラグを立てて PyObject_GC_New して PyObject_GC_Track 、 PyObject_GC_Untrack, PyObject_GC_DEL するようにするのと tp_traverse, tp_clear への登録をする。
 
 flags が READONLY ではない PyObject* メンバーを持った場合、これを del される可能性がある。 del された場合 NULL が入るので備えなければならない。
+
+## [buffer](buffer/spam.c)
+[Buffer Protocol](https://docs.python.jp/3/c-api/buffer.html) に対応した型を使う場合、 PyObject_GetBuffer もしくは PyArgs_ParseTuple を使う。これにより C から直接型が保持しているメモリにアクセスできる。得られたメモリが書き換え可能か、構造は、連続性はあるかなどは PyObject_GetBuffer でどのように要求したか次第。その要求に Buffer Protocol 対応型が応じてくれるかは型次第。
+
+Buffer Protocol に対応した型を作る場合、 [PyBufferProcs](https://docs.python.jp/3/c-api/typeobj.html#buffer-object-structures) を定義し getbuffer, releasebuffer を書かなくてはならない。 getbuffer でメモリを参照するポインタを返してやる。単なるバイト列を公開する程度の用途であれば [PyBuffer_FillInfo](https://docs.python.jp/3/c-api/buffer.html#c.Py_buffer) を使うのが楽。書き換えの可不可に応じて FillInfo の readonly フラグを使い分ける。
