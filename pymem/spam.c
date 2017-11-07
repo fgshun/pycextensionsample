@@ -109,12 +109,52 @@ BinaryTree_insert(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
 }
 
 static PyObject *
+BinaryTree__delete(Node **node, long v)
+{
+    Node *temp, *temp2;
+
+    while (*node != NULL) {
+        if ((*node)->value > v) {
+            node = &(*node)->left;
+        } else if ((*node)->value < v) {
+            node = &(*node)->right;
+        } else {
+            if ((*node)->left && (*node)->right) {
+                temp2 = (*node)->left;
+                while (temp2->right) {
+                    temp2 = temp2->right;
+                }
+                temp = *node;
+                *node = temp2;
+                /* XXX 5 の */ //temp2 = temp2->left;
+                (*node)->left = temp->left;
+                (*node)->right = temp->right;
+            } else if ((*node)->left) {
+                temp = *node;
+                *node = (*node)->left;
+            } else if ((*node)->right) {
+                temp = *node;
+                *node = (*node)->right;
+            } else {
+                temp = *node;
+                *node = NULL;
+            }
+            PyMem_Free(temp);
+            Py_RETURN_TRUE;
+        }
+
+    }
+
+    Py_RETURN_FALSE;
+}
+
+static PyObject *
 BinaryTree_delete(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
 {
     long v;
     if (!PyArg_ParseTuple(args, "l", &v)) { return NULL; }
 
-    Py_RETURN_NONE;
+    return BinaryTree__delete(&self->root, v);
 }
 
 static PyMethodDef BinaryTree_methods[] = {

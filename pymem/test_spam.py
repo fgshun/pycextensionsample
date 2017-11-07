@@ -28,3 +28,19 @@ def test_insert_search():
         assert b.search(v)
     assert 0 not in seq
     assert not b.search(0)
+
+
+def test_delete():
+    a = spam.BinaryTree()
+    a.insert(0)
+    a.insert(6)
+    a.insert(3)
+    a.insert(7)
+    a.insert(2)
+    a.insert(4)
+    a.insert(5)
+
+    assert list(a) == [0, 2, 3, 4, 5, 6, 7]
+
+    a.delete(6)
+    assert list(a) == [0, 2, 3, 4, 5, 7]
