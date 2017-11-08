@@ -22,7 +22,7 @@ Python 3.5 より [PEP 489](https://www.python.org/dev/peps/pep-0451/) にある
 
 [xxmodule.c](https://github.com/python/cpython/blob/v3.6.3/Modules/xxmodule.c) というテンプレートが CPython のソースには含まれている。ある程度わかっていれば、これから作ろうとしているものに対しどこが不要か選べるならば便利なのだろうと思う。はやくそうなりたいものだ。新しい型の作り方から始まっている。
 
-## [pymethodef](pymethodef/spam.c)
+## [pymethoddef](pymethoddef/spam.c)
 モジュール関数の作成方法。
 
 [PyCFunction](https://docs.python.jp/3/c-api/structures.html?highlight=pycfunction#c.PyCFunction) 、つまりひとつ目の引数に モジュールオブジェクト、ふたつ目の引数に引数を表す tuple オブジェクトを受け取る関数を作ればよい。作ったメソッドをモジュールやクラスに紐付けるためには [PyMethodDef](https://docs.python.jp/3/c-api/structures.html#c.PyMethodDef) を作る。呼び出し規約 (calling convention) ml_flags を設定することでキーワード引数を使えるようにしたり、引数を受け取らない、引数をひとつだけ受け取ることを示す。オーバーヘッドを減らすためにあるのか？ いや [PyCFunction_Call](https://github.com/python/cpython/blob/v3.6.3/Objects/methodobject.c#L81) などを見るに受け取り側の手間を省くのが目的で処理量は変わらない、か。
