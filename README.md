@@ -61,3 +61,6 @@ flags が READONLY ではない PyObject* メンバーを持った場合、こ�
 Buffer Protocol に対応した型を作る場合、 [PyBufferProcs](https://docs.python.jp/3/c-api/typeobj.html#buffer-object-structures) を定義し getbuffer, releasebuffer を書かなくてはならない。 getbuffer でメモリを参照するポインタを返してやる。単なるバイト列を公開する程度の用途であれば [PyBuffer_FillInfo](https://docs.python.jp/3/c-api/buffer.html#c.Py_buffer) を使うのが楽。書き換えの可不可に応じて FillInfo の readonly フラグを使い分ける。
 
 getbuffer には view-\>obj の参照カウントを増やしてメモリ公開元のオブジェクト自身が GC に不意に回収されないようにする義務があるが、 PyBuffer_FillInfo を使う場合これが [おこなってくれる](https://github.com/python/cpython/blob/v3.6.2/Objects/abstract.c#L636) ので改めて Py_INCREF する必要はない。そして PyBuffer_Release は Py_DECREF を[おこなう](https://github.com/python/cpython/blob/v3.6.2/Objects/abstract.c#L667) 。数え間違いに注意。
+
+## [pymem](pymem/spam.c)
+Python ヒープより[メモリを借り受け、使い、開放する](https://docs.python.jp/3/c-api/memory.html#memory-interface)には PyMem_Malloc, PyMemFree などをつかう。 C の malloc, free らにそっくり。これらをつかうメリットの説明は[ここ](https://docs.python.jp/3/c-api/memory.html#memory-interface)にあるように少量短寿命の用途のためのメモリの使い回し。なのでこれにそぐわないような、たとえば最初から最後までメモリ借りっぱなしとかであれば PyMem_RawMalloc らの使用を考慮する。確保しようとするサイズが大きければ勝手に Raw が使用される。
