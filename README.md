@@ -3,7 +3,7 @@
 
 なので複数回世話になった部分についてリンクをはったり動きが確かめられるコードをかいてみたりすることにした。
 
-Python 3.6.2 にて動作させている。たぶん 3.5 でも動く。
+Python 3.6.3 にて動作させている。たぶん 3.5 でも動く。
 
 ## [empty](empty/spam.c)
 空のモジュールの作成方法。一段階初期化。
@@ -20,14 +20,14 @@ Python 3.5 より [PEP 489](https://www.python.org/dev/peps/pep-0451/) にある
 
 各モジュールオブジェクトごとに固有のメモリを割り当てることができる。 m_size にて大きさを指定。不要なら 0　。 -1 は特殊で再初期化不可であることをインタプリタに伝える、静的な領域を使っているときなどに -1 設定する。 [PEP 3121](https://www.python.org/dev/peps/pep-3121/) に 1 以上を設定し [PyModule_GetState](https://docs.python.jp/3/c-api/module.html#c.PyModule_GetState) を使う例がある。
 
-[xxmodule.c](https://github.com/python/cpython/blob/v3.6.2/Modules/xxmodule.c) というテンプレートが CPython のソースには含まれている。ある程度わかっていれば、これから作ろうとしているものに対しどこが不要か選べるならば便利なのだろうと思う。はやくそうなりたいものだ。新しい型の作り方から始まっている。
+[xxmodule.c](https://github.com/python/cpython/blob/v3.6.3/Modules/xxmodule.c) というテンプレートが CPython のソースには含まれている。ある程度わかっていれば、これから作ろうとしているものに対しどこが不要か選べるならば便利なのだろうと思う。はやくそうなりたいものだ。新しい型の作り方から始まっている。
 
 ## [pymethodef](pymethodef/spam.c)
 モジュール関数の作成方法。
 
-[PyCFunction](https://docs.python.jp/3/c-api/structures.html?highlight=pycfunction#c.PyCFunction) 、つまりひとつ目の引数に モジュールオブジェクト、ふたつ目の引数に引数を表す tuple オブジェクトを受け取る関数を作ればよい。作ったメソッドをモジュールやクラスに紐付けるためには [PyMethodDef](https://docs.python.jp/3/c-api/structures.html#c.PyMethodDef) を作る。呼び出し規約 (calling convention) ml_flags を設定することでキーワード引数を使えるようにしたり、引数を受け取らない、引数をひとつだけ受け取ることを示す。オーバーヘッドを減らすためにあるのか？ いや [PyCFunction_Call](https://github.com/python/cpython/blob/v3.6.2/Objects/methodobject.c#L81) などを見るに受け取り側の手間を省くのが目的で処理量は変わらない、か。
+[PyCFunction](https://docs.python.jp/3/c-api/structures.html?highlight=pycfunction#c.PyCFunction) 、つまりひとつ目の引数に モジュールオブジェクト、ふたつ目の引数に引数を表す tuple オブジェクトを受け取る関数を作ればよい。作ったメソッドをモジュールやクラスに紐付けるためには [PyMethodDef](https://docs.python.jp/3/c-api/structures.html#c.PyMethodDef) を作る。呼び出し規約 (calling convention) ml_flags を設定することでキーワード引数を使えるようにしたり、引数を受け取らない、引数をひとつだけ受け取ることを示す。オーバーヘッドを減らすためにあるのか？ いや [PyCFunction_Call](https://github.com/python/cpython/blob/v3.6.3/Objects/methodobject.c#L81) などを見るに受け取り側の手間を省くのが目的で処理量は変わらない、か。
 
-[呼び出し規約 METH_FASTCALL が 3.6 で追加](http://dsas.blog.klab.org/archives/2017-01/python-dev-201701.html) とのこと。タプルや辞書への詰め直しが不要で早い。 [たしかにあった](https://github.com/python/cpython/blob/v3.6.2/Include/methodobject.h#L89) がドキュメント化されてはいないのでまだサードパーティーが使うものではないというところだろうか。
+[呼び出し規約 METH_FASTCALL が 3.6 で追加](http://dsas.blog.klab.org/archives/2017-01/python-dev-201701.html) とのこと。タプルや辞書への詰め直しが不要で早い。 [たしかにあった](https://github.com/python/cpython/blob/v3.6.3/Include/methodobject.h#L89) がドキュメント化されてはいないのでまだサードパーティーが使うものではないというところだろうか。
 
 ## [parseargs](parseargs/spam.c)
 PyCFunction, PyCFunctionWithKeywords は通常 Python の tuple と dict オブジェクトを渡される。これを C の変数に変換するのはよくある作業。なのでそれ用の関数が用意されている。また、戻り値は Python オブジェクトと決まっているので C の変数から変換するのもよくある作業。これも。
@@ -46,7 +46,7 @@ datetime モジュールを使う。
 
 `PyImport_ImportModule('datetime')` することもできるけれども。オブジェクト生成や値の直接参照のための [マクロ](https://docs.python.jp/3/c-api/datetime.html) が用意されている。これを使うときは `datetime.h` を include し PyDateTime_IMPORT マクロを実行しておく必要がある。
 
-[PyCapsule](https://docs.python.jp/3/c-api/capsule.html) の使用例を _datetimemodule.cで発見。 [PyDateTime_IMPORT マクロの正体](https://github.com/python/cpython/blob/v3.6.2/Modules/_datetimemodule.c#L5806) は PyCapsule_Import で型オブジェクトや関数へのポインタを用意するというものだった。
+[PyCapsule](https://docs.python.jp/3/c-api/capsule.html) の使用例を _datetimemodule.cで発見。 [PyDateTime_IMPORT マクロの正体](https://github.com/python/cpython/blob/v3.6.3/Modules/_datetimemodule.c#L5806) は PyCapsule_Import で型オブジェクトや関数へのポインタを用意するというものだった。
 
 ## [definingtypes](definingtypes/spam.c)
 static にタイプオブジェクトを確保する方法は [チュートリアル](https://docs.python.jp/3/extending/newtypes.html) にある。ヒープに作るには [PyType_FromSpec](https://docs.python.jp/3/c-api/type.html#c.PyType_FromSpec) にておこなう。 new で PyObject_New を用いたら dealloc で PyObject_Del をわすれずに。
@@ -60,7 +60,11 @@ flags が READONLY ではない PyObject* メンバーを持った場合、こ�
 
 Buffer Protocol に対応した型を作る場合、 [PyBufferProcs](https://docs.python.jp/3/c-api/typeobj.html#buffer-object-structures) を定義し getbuffer, releasebuffer を書かなくてはならない。 getbuffer でメモリを参照するポインタを返してやる。単なるバイト列を公開する程度の用途であれば [PyBuffer_FillInfo](https://docs.python.jp/3/c-api/buffer.html#c.Py_buffer) を使うのが楽。書き換えの可不可に応じて FillInfo の readonly フラグを使い分ける。
 
-getbuffer には view-\>obj の参照カウントを増やしてメモリ公開元のオブジェクト自身が GC に不意に回収されないようにする義務があるが、 PyBuffer_FillInfo を使う場合これが [おこなってくれる](https://github.com/python/cpython/blob/v3.6.2/Objects/abstract.c#L636) ので改めて Py_INCREF する必要はない。そして PyBuffer_Release は Py_DECREF を[おこなう](https://github.com/python/cpython/blob/v3.6.2/Objects/abstract.c#L667) 。数え間違いに注意。
+getbuffer には view-\>obj の参照カウントを増やしてメモリ公開元のオブジェクト自身が GC に不意に回収されないようにする義務があるが、 PyBuffer_FillInfo を使う場合これが [おこなってくれる](https://github.com/python/cpython/blob/v3.6.3/Objects/abstract.c#L636) ので改めて Py_INCREF する必要はない。そして PyBuffer_Release は Py_DECREF を[おこなう](https://github.com/python/cpython/blob/v3.6.3/Objects/abstract.c#L667) 。数え間違いに注意。
 
 ## [pymem](pymem/spam.c)
 Python ヒープより[メモリを借り受け、使い、開放する](https://docs.python.jp/3/c-api/memory.html#memory-interface)には PyMem_Malloc, PyMemFree などをつかう。 C の malloc, free らにそっくり。これらをつかうメリットの説明は[ここ](https://docs.python.jp/3/c-api/memory.html#memory-interface)にあるように少量短寿命の用途のためのメモリの使い回し。なのでこれにそぐわないような、たとえば最初から最後までメモリ借りっぱなしとかであれば PyMem_RawMalloc らの使用を考慮する。確保しようとするサイズが大きければ勝手に Raw が使用される。
+
+ANSI C の malloc, free までをも直接使わず [PyMem_RawMalloc](https://github.com/python/cpython/blob/v3.6.3/Objects/obmalloc.c#L65) , PyMem_RawFree としてラップしている理由は理解しきれてはいないけれども、要り用だったのだろう。ポータビリティの向上か。少なくとも malloc(0) の挙動の処理系依存を回避しようとしているのは確か。
+
+メモリ確保、開放例として二分探索木を用意し再帰をつかってみたついでに。 python 側に[再帰の監視](https://docs.python.jp/3/c-api/exceptions.html#recursion-control)をまかせることができる。 Py_EnterRecursiveCall と Py_LeaveRecursiveCall で再帰しようとしているところを挟む。これでバグって暴走したり、そも対象データが大きすぎたりしたときに RecursionError をセットしつつ止まってくれる。

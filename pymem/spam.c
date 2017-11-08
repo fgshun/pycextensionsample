@@ -49,6 +49,8 @@ BinaryTree_dealloc(BinaryTreeObject *self)
 static PyObject *
 BinaryTree__search(Node *node, long v)
 {
+    PyObject *ret;
+
     if (node == NULL) {
         Py_RETURN_FALSE;
     }
@@ -56,9 +58,15 @@ BinaryTree__search(Node *node, long v)
         Py_RETURN_TRUE;
     }
     if (node->value > v) {
-        return BinaryTree__search(node->left, v);
+        if (Py_EnterRecursiveCall(" BinaryTree__search")) { return NULL; }
+        ret = BinaryTree__search(node->left, v);
+        Py_LeaveRecursiveCall();
+        return ret;
     }
-    return BinaryTree__search(node->right, v);
+    if (Py_EnterRecursiveCall(" BinaryTree__search")) { return NULL; }
+    ret = BinaryTree__search(node->right, v);
+    Py_LeaveRecursiveCall();
+    return ret;
 }
 
 static PyObject *
@@ -72,6 +80,8 @@ BinaryTree_search(BinaryTreeObject *self, PyObject *args)
 Node *
 BinaryTree__insert(Node *node, long v)
 {
+    Node *temp;
+
     if (node == NULL) {
         node = PyMem_Malloc(sizeof(Node));
         node->value = v;
@@ -80,10 +90,18 @@ BinaryTree__insert(Node *node, long v)
         return node;
     }
     if (node->value > v) {
-        node->left = BinaryTree__insert(node->left, v);
+        if (Py_EnterRecursiveCall(" BinaryTree__insert")) { return NULL; }
+        temp = BinaryTree__insert(node->left, v);
+        Py_LeaveRecursiveCall();
+        if (!temp) { return NULL; }
+        node->left = temp;
         return node;
     }
-    node->right = BinaryTree__insert(node->right, v);
+    if (Py_EnterRecursiveCall(" BinaryTree__insert")) { return NULL; }
+    temp = BinaryTree__insert(node->right, v);
+    Py_LeaveRecursiveCall();
+    if (!temp) { return NULL; }
+    node->right = temp;
     return node;
 }
 
@@ -91,9 +109,12 @@ static PyObject *
 BinaryTree_insert(BinaryTreeObject *self, PyObject *args)
 {
     long v;
+    Node *node;
     if (!PyArg_ParseTuple(args, "l", &v)) { return NULL; }
 
-    self->root = BinaryTree__insert(self->root, v);
+    node = BinaryTree__insert(self->root, v);
+    if (!node) { return NULL; }
+    self->root = node;
     Py_RETURN_NONE;
 }
 
