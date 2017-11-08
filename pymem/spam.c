@@ -6,7 +6,6 @@ typedef struct _Node Node;
 typedef struct {
     PyObject_HEAD
     Node *root;
-    Py_ssize_t export_count;
 } BinaryTreeObject;
 
 struct _Node {
@@ -16,13 +15,12 @@ struct _Node {
 };
 
 static PyObject *
-BinaryTree_new(PyTypeObject *cls, PyObject *args, PyObject *kwargs)
+BinaryTree_new(PyTypeObject *cls, PyObject *args)
 {
     BinaryTreeObject *self;
 
     self = PyObject_New(BinaryTreeObject, cls);
     if (!self) { return NULL; }
-    self->export_count = 0;
 
     self->root = NULL;
 
@@ -44,18 +42,9 @@ BinaryTree__dealloc(Node *node)
 static void
 BinaryTree_dealloc(BinaryTreeObject *self)
 {
-    if (self->export_count > 0) {
-        PyErr_SetString(PyExc_SystemError, "binary_tree dealloc");
-        PyErr_Print();
-    }
     BinaryTree__dealloc(self->root);
     PyObject_Del(self);
 }
-
-static PyMemberDef BinaryTree_members[] = {
-    {"export_count", T_PYSSIZET, offsetof(BinaryTreeObject, export_count), READONLY, NULL},
-    {NULL}
-};
 
 static PyObject *
 BinaryTree__search(Node *node, long v)
@@ -73,7 +62,7 @@ BinaryTree__search(Node *node, long v)
 }
 
 static PyObject *
-BinaryTree_search(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
+BinaryTree_search(BinaryTreeObject *self, PyObject *args)
 {
     long v;
     if (!PyArg_ParseTuple(args, "l", &v)) { return NULL; }
@@ -99,7 +88,7 @@ BinaryTree__insert(Node *node, long v)
 }
 
 static PyObject *
-BinaryTree_insert(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
+BinaryTree_insert(BinaryTreeObject *self, PyObject *args)
 {
     long v;
     if (!PyArg_ParseTuple(args, "l", &v)) { return NULL; }
@@ -111,7 +100,7 @@ BinaryTree_insert(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 BinaryTree__delete(Node **node, long v)
 {
-    Node *temp, *temp2;
+    Node *del_node, **move_node;
 
     while (*node != NULL) {
         if ((*node)->value > v) {
@@ -120,26 +109,27 @@ BinaryTree__delete(Node **node, long v)
             node = &(*node)->right;
         } else {
             if ((*node)->left && (*node)->right) {
-                temp2 = (*node)->left;
-                while (temp2->right) {
-                    temp2 = temp2->right;
+                del_node = *node;
+
+                move_node = &(*node)->left;
+                while ((*move_node)->right) {
+                    move_node = &(*move_node)->right;
                 }
-                temp = *node;
-                *node = temp2;
-                /* XXX 5 の */ //temp2 = temp2->left;
-                (*node)->left = temp->left;
-                (*node)->right = temp->right;
+                *node = *move_node;
+                *move_node = (*move_node)->left;
+                (*node)->left = del_node->left;
+                (*node)->right = del_node->right;
             } else if ((*node)->left) {
-                temp = *node;
+                del_node = *node;
                 *node = (*node)->left;
             } else if ((*node)->right) {
-                temp = *node;
+                del_node = *node;
                 *node = (*node)->right;
             } else {
-                temp = *node;
+                del_node = *node;
                 *node = NULL;
             }
-            PyMem_Free(temp);
+            PyMem_Free(del_node);
             Py_RETURN_TRUE;
         }
 
@@ -149,7 +139,7 @@ BinaryTree__delete(Node **node, long v)
 }
 
 static PyObject *
-BinaryTree_delete(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
+BinaryTree_delete(BinaryTreeObject *self, PyObject *args)
 {
     long v;
     if (!PyArg_ParseTuple(args, "l", &v)) { return NULL; }
@@ -165,15 +155,14 @@ static PyMethodDef BinaryTree_methods[] = {
 };
 
 static PyObject *
-BinaryTree_iter(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
+BinaryTree_iter(PyObject *self)
 {
-    return PyObject_CallMethod((PyObject *)self, "_iter_type", "O", self);
+    return PyObject_CallMethod(self, "_iter_type", "O", self);
 }
 
 static PyType_Slot BinaryTree_Type_slots[] = {
     {Py_tp_new, BinaryTree_new},
     {Py_tp_dealloc, BinaryTree_dealloc},
-    {Py_tp_members, BinaryTree_members},
     {Py_tp_methods, BinaryTree_methods},
     {Py_tp_iter, BinaryTree_iter},
     {0, 0},
@@ -196,14 +185,14 @@ struct _NodeStack{
 
 typedef struct {
     PyObject_HEAD
-    PyObject *p;
+    PyObject *treeobj;
     Node *node;
     NodeStack *stack;
     char state;
 } BinaryTreeIterObject;
 
 static PyObject *
-BinaryTreeIter_new(PyTypeObject *cls, PyObject *args, PyObject *kwargs)
+BinaryTreeIter_new(PyTypeObject *cls, PyObject *args)
 {
     BinaryTreeIterObject *self;
     PyObject *binary_tree = NULL;
@@ -217,7 +206,7 @@ BinaryTreeIter_new(PyTypeObject *cls, PyObject *args, PyObject *kwargs)
     self->stack = NULL;
     self->state = 0;
     Py_INCREF(binary_tree);
-    self->p = binary_tree;
+    self->treeobj = binary_tree;
 
     return (PyObject *)self;
 }
@@ -232,18 +221,19 @@ BinaryTreeIter_dealloc(BinaryTreeIterObject *self)
         PyMem_Free(temp);
     }
 
-    Py_DECREF(self->p);
+    Py_DECREF(self->treeobj);
     PyObject_Del(self);
 }
 
 static PyObject *
-BinaryTreeIter_iter(BinaryTreeObject *self, PyObject *args, PyObject *kwargs)
+BinaryTreeIter_iter(PyObject *self)
 {
+    Py_INCREF(self);
     return (PyObject *)self;
 }
 
 static PyObject *
-BinaryTreeIter_iternext(BinaryTreeIterObject *self, PyObject *args, PyObject *kwargs)
+BinaryTreeIter_iternext(BinaryTreeIterObject *self)
 {
     NodeStack *temp;
 
@@ -252,7 +242,7 @@ BinaryTreeIter_iternext(BinaryTreeIterObject *self, PyObject *args, PyObject *kw
             /* suspended */
             goto restert;
         case 2:
-            /* stop iteration */
+            /* finished */
             return NULL;
         case -1:
             PyErr_SetString(PyExc_MemoryError, "");
@@ -287,7 +277,7 @@ restert:
         }
     }
 
-    self->state = 2; /* stop iteration. */
+    self->state = 2; /* finished */
     return NULL;
 }
 

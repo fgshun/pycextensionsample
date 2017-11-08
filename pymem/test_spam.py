@@ -2,6 +2,8 @@ import random
 import pytest
 import spam
 
+SEQUENCE_LENGTH = 100
+
 
 def test_insert_search():
     a = spam.BinaryTree()
@@ -18,18 +20,6 @@ def test_insert_search():
     assert not a.search(2)
 
 
-    random.seed(20171105)
-    b = spam.BinaryTree()
-    seq = [random.randrange(-1000, 1000) for i in range(100)]
-    for v in seq:
-        b.insert(v)
-    assert list(b) == sorted(seq)
-    for v in seq:
-        assert b.search(v)
-    assert 0 not in seq
-    assert not b.search(0)
-
-
 def test_delete():
     a = spam.BinaryTree()
     a.insert(0)
@@ -44,3 +34,33 @@ def test_delete():
 
     a.delete(6)
     assert list(a) == [0, 2, 3, 4, 5, 7]
+
+
+@pytest.fixture(scope='module')
+def sequence():
+    random.seed(20171105)
+    return tuple(random.randrange(-1000, 1000) for i in range(SEQUENCE_LENGTH))
+
+
+def test_insert_search2(sequence):
+    b = spam.BinaryTree()
+    for v in sequence:
+        b.insert(v)
+    assert list(b) == sorted(sequence)
+    for v in sequence:
+        assert b.search(v)
+    assert 0 not in sequence
+    assert not b.search(0)
+
+
+@pytest.mark.parametrize('i', range(SEQUENCE_LENGTH))
+def test_delete2(sequence, i):
+    random.seed(20171105)
+    a = spam.BinaryTree()
+    for v in sequence:
+        a.insert(v)
+
+    a.delete(sequence[i])
+    seq = list(sequence)
+    seq.pop(i)
+    assert list(a) == sorted(seq)
