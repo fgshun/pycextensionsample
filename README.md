@@ -41,6 +41,17 @@ PyCFunction, PyCFunctionWithKeywords は通常 Python の tuple と dict オブ�
 ## [abstractprotocol](abstractprotocol/spam.c)
 Python だと `a.b` とか `a()` とか `a[0]` とか `for b in a:` などと書くいつもの操作、 C API ではどうやるの？ それにこたえてくれる文章が[抽象オブジェクトレイヤ (abstract objects layer)](https://docs.python.jp/3/c-api/abstract.html) 。また、ライブラリを import するには [PyImport_ImportModule](https://docs.python.jp/3/c-api/import.html#c.PyImport_ImportModule) を使う。
 
+## [exception](exception/spam.c)
+例外の送出、エラーインジケータの操作。
+
+[例外を送出](https://docs.python.jp/3/c-api/exceptions.html#raising-exceptions) するには PyErr_SetString などを使う。
+
+例外が起きたかどうかは戻り値を確認する。ほとんどの関数は例外をセットすると PyObject \* なら NULL 、 int なら -1 を返してくる。戻り値での確認では具合が悪い場合は [エラーインジケータへの問い合わせ](https://docs.python.jp/3/c-api/exceptions.html#querying-the-error-indicator) をおこなう。 PyErr_Occurred でだいたい事足りる。 例外のあるなしではなく何が起こったかまでを知るには PyErr_ExceptionMatches, PyErr_GivinExceptionMatches 。
+
+例外を補足し投げ直すようなコードはを書くには PyErr_Fetch 、 PyErr_Restore か。
+
+[raise 文](https://docs.python.jp/3/reference/simple_stmts.html#the-raise-statement) の説明も読む。 Python で except や finally の中で例外を送出すると新しい例外の `__context__` に古い例外が付与される。 raise from すると同様に `__cause__` に付与される。 with_traceback すればトレースバックオブジェクトの設定がなされる。これを C 拡張で模倣するには [PyException_Set](https://docs.python.jp/3/c-api/exceptions.html#exception-objects) シリーズをつかう、であっているだろうか。
+
 ## [datetime](datetime/spam.c)
 datetime モジュールを使う。
 
