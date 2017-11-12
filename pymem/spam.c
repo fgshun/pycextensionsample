@@ -77,7 +77,7 @@ BinaryTree_search(BinaryTreeObject *self, PyObject *args)
     return BinaryTree__search(self->root, v);
 }
 
-Node *
+static Node *
 BinaryTree__insert(Node *node, long v)
 {
     Node *temp;
@@ -318,7 +318,7 @@ static PyType_Spec BinaryTreeIter_Type_spec = {
     BinaryTreeIter_Type_slots
 };
 
-int spam_exec(PyObject *module)
+static int spam_exec(PyObject *module)
 {
     PyObject *binary_tree_type = NULL, *binary_tree_iter_type = NULL;
 

@@ -100,7 +100,7 @@ spam_getitem(PyObject *self, PyObject *args)
 }
 
 
-int spam_exec(PyObject *module)
+static int spam_exec(PyObject *module)
 {
     if (!SpamError) {
         SpamError = PyErr_NewException("spam.error", NULL, NULL);

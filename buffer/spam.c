@@ -7,7 +7,7 @@ typedef struct {
     Py_ssize_t export_count;
 } SpamObject;
 
-int Spam_getbuffer(SpamObject *exporter, Py_buffer *view, int flags) {
+static int Spam_getbuffer(SpamObject *exporter, Py_buffer *view, int flags) {
     int ret;
 
     if (view == NULL) {
@@ -22,7 +22,7 @@ int Spam_getbuffer(SpamObject *exporter, Py_buffer *view, int flags) {
     return ret;
 }
 
-void Spam_releasebuffer(SpamObject *exporter, Py_buffer *view) {
+static void Spam_releasebuffer(SpamObject *exporter, Py_buffer *view) {
     exporter->export_count--;
 }
 
@@ -80,7 +80,7 @@ static PyType_Spec Spam_Type_spec = {
     Spam_Type_slots
 };
 
-int spam_exec(PyObject *module)
+static int spam_exec(PyObject *module)
 {
     PyObject *spam_type;
     spam_type = PyType_FromSpec(&Spam_Type_spec);

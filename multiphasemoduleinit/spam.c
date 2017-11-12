@@ -3,7 +3,7 @@
 
 static PyObject *SpamError = NULL;
 
-int spam_exec(PyObject *module)
+static int spam_exec(PyObject *module)
 {
     PyObject *zero;
 
