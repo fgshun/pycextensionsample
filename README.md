@@ -55,7 +55,9 @@ Python だと `a.b` とか `a()` とか `a[0]` とか `for b in a:` などと書
 ## [datetime](datetime/spam.c)
 datetime モジュールを使う。
 
-`PyImport_ImportModule('datetime')` することもできるけれども。オブジェクト生成や値の直接参照のための [マクロ](https://docs.python.jp/3/c-api/datetime.html) が用意されている。これを使うときは `datetime.h` を include し PyDateTime_IMPORT マクロを実行しておく必要がある。
+`PyImport_ImportModule('datetime')` することもできるけれども。オブジェクト生成や値の取得のための [マクロ](https://docs.python.jp/3/c-api/datetime.html) が用意されている。これを使うときは `datetime.h` を include し `PyDateTime_IMPORT` マクロを実行しておく必要がある。
+
+datetime は date の subtype だけれども time の subtype ではない。データの詰め込まれ方を見ればそりゃそうだな、と。なので [対応するマクロ](https://github.com/python/cpython/blob/v3.6.3/Include/datetime.h#L117-L140) も異なる。 datetime には `PyDateTime_DATE_` マクロを、 time には `PyDateTime_TIME_` マクロをつかう。
 
 [PyCapsule](https://docs.python.jp/3/c-api/capsule.html) の使用例を _datetimemodule.cで発見。 [PyDateTime_IMPORT マクロの正体](https://github.com/python/cpython/blob/v3.6.3/Modules/_datetimemodule.c#L5806) は PyCapsule_Import で型オブジェクトや関数へのポインタを用意するというものだった。
 
