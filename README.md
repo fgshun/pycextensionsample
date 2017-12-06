@@ -81,3 +81,6 @@ Python ヒープより[メモリを借り受け、使い、開放する](https:/
 ANSI C の malloc, free までをも直接使わず [PyMem_RawMalloc](https://github.com/python/cpython/blob/v3.6.3/Objects/obmalloc.c#L65) , PyMem_RawFree としてラップしている理由は理解しきれてはいないけれども、要り用だったのだろう。ポータビリティの向上か。少なくとも malloc(0) の挙動の処理系依存を回避しようとしているのは確か。
 
 メモリ確保、開放例として二分探索木を用意し再帰をつかってみたついでに。 python 側に[再帰の監視](https://docs.python.jp/3/c-api/exceptions.html#recursion-control)をまかせることができる。 Py_EnterRecursiveCall と Py_LeaveRecursiveCall で再帰しようとしているところを挟む。これでバグって暴走したり、そも対象データが大きすぎたりしたときに RecursionError をセットしつつ止まってくれる。
+
+## [zstd](zstd/myzstd.c)
+[Zstandard](http://facebook.github.io/zstd/) をつかってみた。 CPython の [バッファプロトコル](https://docs.python.jp/3/c-api/buffer.html) 対応型 bytes, bytesarray などは保持しているメモリをエクスポートできる。あとは使用するライブラリのマニュアル、サンプルコードらを見つつ C でのプログラミング。
