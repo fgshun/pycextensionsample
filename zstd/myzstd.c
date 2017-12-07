@@ -28,23 +28,18 @@ myzstd_compress_stream(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *ret = NULL;
     PyObject *read = NULL, *write = NULL, *b = NULL, *w = NULL;
     char *buff_out = NULL;
-    ZSTD_CStream *cstream = NULL;
 
     if (compression_level < 0 || compression_level > max_compression_level) {
         PyErr_Format(PyExc_ValueError, "0 <= compression_level <= %i, but %i", max_compression_level, compression_level);
         goto finally;
     }
 
-    cstream = ZSTD_createCStream();
-    if (!cstream) {
-        PyErr_SetString(PyExc_ValueError, "failed createCStream");
-        goto finally;
-    }
+    myzstd_state *module_state;
+    if (!(module_state= PyModule_GetState(self))) { return NULL; }
 
-    size_t err = ZSTD_initCStream(cstream, compression_level);
+    size_t err = ZSTD_initCStream(module_state->cctx, compression_level);
     if (ZSTD_isError(err)) {
         PyErr_Format(PyExc_ValueError, "failed initCStream %s", ZSTD_getErrorName(err));
-        ZSTD_freeCStream(cstream);
         return NULL;
     }
 
@@ -70,7 +65,7 @@ myzstd_compress_stream(PyObject *self, PyObject *args, PyObject *kwargs)
         ZSTD_inBuffer input = {py_buf.buf, py_buf.len, 0};
         while (input.pos < input.size) {
             ZSTD_outBuffer output = {buff_out, buff_out_size, 0};
-            to_read = ZSTD_compressStream(cstream, &output, &input);
+            to_read = ZSTD_compressStream(module_state->cctx, &output, &input);
             if (ZSTD_isError(to_read)) {
                 PyErr_Format(PyExc_ValueError, "failed compressStream %s", ZSTD_getErrorName(to_read));
                 PyBuffer_Release(&py_buf);
@@ -93,7 +88,7 @@ myzstd_compress_stream(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     ZSTD_outBuffer output = {buff_out, buff_out_size, 0};
-    size_t remaining_to_flush = ZSTD_endStream(cstream, &output);
+    size_t remaining_to_flush = ZSTD_endStream(module_state->cctx, &output);
     if (remaining_to_flush) {
         PyErr_SetString(PyExc_ValueError, "failed endStream");
         goto finally;
@@ -113,7 +108,6 @@ finally:
     Py_XDECREF(write);
 
     if (buff_out) { PyMem_RawFree(buff_out); }
-    if (cstream) { ZSTD_freeCStream(cstream); }
 
     return ret;
 }
@@ -128,15 +122,11 @@ myzstd_decompress_stream(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *ret = NULL;
     PyObject *read = NULL, *write = NULL, *b = NULL, *w = NULL;
     char *buff_out = NULL;
-    ZSTD_DStream *dstream = NULL;
 
-    dstream = ZSTD_createDStream();
-    if (!dstream) {
-        PyErr_SetString(PyExc_ValueError, "failed createDStream");
-        goto finally;
-    }
+    myzstd_state *module_state;
+    if (!(module_state= PyModule_GetState(self))) { return NULL; }
 
-    size_t err = ZSTD_initDStream(dstream);
+    size_t err = ZSTD_initDStream(module_state->dctx);
     if (ZSTD_isError(err)) {
         PyErr_Format(PyExc_ValueError, "failed initDStream %s", ZSTD_getErrorName(err));
         goto finally;
@@ -164,7 +154,7 @@ myzstd_decompress_stream(PyObject *self, PyObject *args, PyObject *kwargs)
         ZSTD_inBuffer input = {py_buf.buf, py_buf.len, 0};
         while (input.pos < input.size) {
             ZSTD_outBuffer output = {buff_out, buff_out_size, 0};
-            to_read = ZSTD_decompressStream(dstream, &output, &input);
+            to_read = ZSTD_decompressStream(module_state->dctx, &output, &input);
             if (ZSTD_isError(to_read)) {
                 PyErr_Format(PyExc_ValueError, "failed decompressStream %s", ZSTD_getErrorName(to_read));
                 PyBuffer_Release(&py_buf);
@@ -195,7 +185,6 @@ finally:
     Py_XDECREF(write);
 
     if (buff_out) { PyMem_RawFree(buff_out); }
-    if (dstream) { ZSTD_freeDStream(dstream); }
 
     return ret;
 }
@@ -214,6 +203,12 @@ myzstd_compress(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    myzstd_state *module_state;
+    if (!(module_state = PyModule_GetState(self))) {
+        PyBuffer_Release(&src);
+        return NULL;
+    }
+
     size_t dst_bound = ZSTD_compressBound(src.len);
     PyObject *ret;
     ret = PyBytes_FromStringAndSize(NULL, dst_bound);
@@ -221,14 +216,7 @@ myzstd_compress(PyObject *self, PyObject *args)
     char *dst = PyBytes_AsString(ret);
     if (!dst) { Py_DECREF(ret); PyBuffer_Release(&src); return NULL; }
 
-    myzstd_state *s;
-    if (!(s= PyModule_GetState(self))) {
-        Py_DECREF(ret);
-        PyBuffer_Release(&src);
-        return NULL;
-    }
-
-    size_t dst_len = ZSTD_compressCCtx(s->cctx, dst, dst_bound, src.buf, src.len, compression_level);
+    size_t dst_len = ZSTD_compressCCtx(module_state->cctx, dst, dst_bound, src.buf, src.len, compression_level);
     PyBuffer_Release(&src);
     unsigned int e = ZSTD_isError(dst_len);
     if (e) {
@@ -247,9 +235,15 @@ myzstd_decompress(PyObject *self, PyObject *args)
     Py_buffer src;
     if (!PyArg_ParseTuple(args, "y*", &src)) { return NULL; }
 
+    myzstd_state *module_state;
+    if (!(module_state = PyModule_GetState(self))) {
+        PyBuffer_Release(&src);
+        return NULL;
+    }
+
     unsigned long long dst_capacity = ZSTD_getFrameContentSize(src.buf, src.len);
     if (dst_capacity == ZSTD_CONTENTSIZE_UNKNOWN) {
-        PyErr_SetString(PyExc_Exception, "getFrameContentSize: CONTENTSIZE_UNKNOWNA");
+        PyErr_SetString(PyExc_Exception, "getFrameContentSize: CONTENTSIZE_UNKNOWN, try use decompress_stream");
         PyBuffer_Release(&src);
         return NULL;
     } else if (dst_capacity == ZSTD_CONTENTSIZE_ERROR) {
@@ -262,14 +256,7 @@ myzstd_decompress(PyObject *self, PyObject *args)
     if (!ret) { PyBuffer_Release(&src); return NULL; }
     char *dst = PyBytes_AsString(ret);
 
-    myzstd_state *s;
-    if (!(s= PyModule_GetState(self))) {
-        Py_DECREF(ret);
-        PyBuffer_Release(&src);
-        return NULL;
-    }
-
-    size_t dst_len = ZSTD_decompressDCtx(s->dctx, dst, dst_capacity, src.buf, src.len);
+    size_t dst_len = ZSTD_decompressDCtx(module_state->dctx, dst, dst_capacity, src.buf, src.len);
     PyBuffer_Release(&src);
     unsigned int e = ZSTD_isError(dst_len);
     if (e) {
