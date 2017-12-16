@@ -89,3 +89,6 @@ ANSI C の malloc, free までをも直接使わず [PyMem_RawMalloc](https://gi
 イテレータの使用。 [PyObject_GetIter](https://docs.python.jp/3/c-api/object.html#c.PyObject_GetIter) が Python での `iter()` に相当する。 [PyIter_Next](https://docs.python.jp/3/c-api/iter.html#c.PyIter_Next) が `next` 相当、 while ループで繰り返し呼ぶことで要素を取り出す。 NULL が返ったとき要素がなくなったのかエラーなのか判別するために `PyErr_Occurred` がいる。
 
 `PyIter_Check` マクロの実装が `(obj)->ob_type->tp_iternext != NULL` を含むせいで LIMITED API 環境での使用不可、かつ `PyIter_Next` に非イテレータをわたすとセグフォである。とはいえ今回の `spam_use_iterator` のような引数がイテレータそのものであることを期待した関数を作らなければ問題ない。もしくは Python 側に公開することを避けて、イテレータそのもの以外に使わないようにすればなんとか。公式 API にもチェックを省略してあって間違った使い方をすれば落ちる関数、マクロはあることだし。
+
+## [iterator](iterator/spam.c)
+イテレータの作成。 iter があればイテレート可能に、自身を返す iter と [iternext](https://docs.python.jp/3/c-api/typeobj.html#c.PyTypeObject.tp_iternext) があればイテレータになる。 iternext は次の要素を、要素がないときは NULL を返すようにつくる。ないときに StopIteration 例外は設定してもしなくてもよいそうな。
