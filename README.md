@@ -92,3 +92,6 @@ ANSI C の malloc, free までをも直接使わず [PyMem_RawMalloc](https://gi
 
 ## [iterator](iterator/spam.c)
 イテレータの作成。 iter があればイテレート可能に、自身を返す iter と [iternext](https://docs.python.jp/3/c-api/typeobj.html#c.PyTypeObject.tp_iternext) があればイテレータになる。 iternext は次の要素を、要素がないときは NULL を返すようにつくる。ないときに StopIteration 例外は設定してもしなくてもよいそうな。
+
+## [number_protocol](number_protocol/spam.c)
+`+` とか `*` などの演算子が使える数値風クラスの作成方法。 Python では `__add__` とか `__mul__` といったメソッドを作っていた、 C ではどうするのか。 [PyNumberMethods](https://docs.python.jp/3/c-api/typeobj.html#number-structs) を用意して `tp_as_number` にいれる。ヒープに [PyType_FrinSpec](https://docs.python.jp/3/c-api/type.html#c.PyType_FromSpec) で作るクラスの場合は `PyType_slot` に　`nb_` から始まる名前で関数を登録する。 LIMITED API 環境でも使えるスロットの一覧は [PEP 384](https://www.python.org/dev/peps/pep-0384/#type-objects) にある。
