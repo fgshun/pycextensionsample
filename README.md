@@ -95,3 +95,6 @@ ANSI C の malloc, free までをも直接使わず [PyMem_RawMalloc](https://gi
 
 ## [number_protocol](number_protocol/spam.c)
 `+` とか `*` などの演算子が使える数値風クラスの作成方法。 Python では `__add__` とか `__mul__` といったメソッドを作っていた、 C ではどうするのか。 [PyNumberMethods](https://docs.python.jp/3/c-api/typeobj.html#number-structs) を用意して `tp_as_number` にいれる。ヒープに [PyType_FrinSpec](https://docs.python.jp/3/c-api/type.html#c.PyType_FromSpec) で作るクラスの場合は `PyType_slot` に　`nb_` から始まる名前で関数を登録する。 LIMITED API 環境でも使えるスロットの一覧は [PEP 384](https://www.python.org/dev/peps/pep-0384/#type-objects) にある。
+
+## [awaitable](awaitable/spam.c)
+[awaitable](https://docs.python.org/ja/3/glossary.html#term-awaitable) を作る。 `__await__`, `__aiter__`, `__anext__` メソッドに相当する関数は [PyAsyncMethod](https://docs.python.org/ja/3/c-api/typeobj.html#async-object-structures) `*tp_as_async` に登録する。 `send`, `throw`, `close` 用のフィールドはないので `tp_methods` へ。
